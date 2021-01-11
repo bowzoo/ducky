@@ -1,3 +1,4 @@
+import argparse
 import os
 
 import tensorflow as tf
@@ -20,7 +21,8 @@ def create_model():
 
       return model
 
-def slp():
+def slp(data_dir):
+    #TODO: data_dir is fake
     (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.mnist.load_data()
 
     train_labels = train_labels[:1000]
@@ -29,6 +31,10 @@ def slp():
     train_images = train_images[:1000].reshape(-1, 28 * 28) / 255.0
     test_images = test_images[:1000].reshape(-1, 28 * 28) / 255.0
 
+
+    os.makedirs("training_1", exist_ok=True)
+    os.makedirs("training_2", exist_ok=True)
+    os.makedirs("saved_model_pip", exist_ok=True)
 
     # Create a basic model instance
     model = create_model()
@@ -141,3 +147,11 @@ def slp():
 
 
     model.save('saved_model_pip/my_model') 
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='processing data')
+    parser.add_argument('--data_dir', help='path to images and labels.')
+    args = parser.parse_args()
+
+    preprocess(data_dir=args.data_dir)
