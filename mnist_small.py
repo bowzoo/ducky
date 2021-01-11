@@ -154,4 +154,4 @@ if __name__ == '__main__':
     parser.add_argument('--data_dir', help='path to images and labels.')
     args = parser.parse_args()
 
-    preprocess(data_dir=args.data_dir)
+    slp(args.data_dir)
