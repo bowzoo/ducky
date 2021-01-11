@@ -20,6 +20,8 @@ def preprocess(data_dir):
     train_images = train_images[:1000].reshape(-1, 28 * 28) / 255.0
     test_images = test_images[:1000].reshape(-1, 28 * 28) / 255.0
 
+    os.makedirs(data_dir, exist_ok=True)
+
     with open(os.path.join(data_dir, 'train_images.pickle'), 'wb') as f:
         pickle.dump(train_images, f)
 
