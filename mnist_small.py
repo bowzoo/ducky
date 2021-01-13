@@ -47,7 +47,8 @@ def get_example_dataset():
     return train_labels, test_labels, train_images, test_images
 
 
-def save_all_ckpt(train_images, train_lables, data_dir=CKPT_1_DIR, cp_name=CKPT_NAME, epochs=10):
+def save_all_ckpt(train_labels, test_labels, train_images, test_images,
+                  data_dir=CKPT_1_DIR, cp_name=CKPT_NAME, epochs=10):
 
     os.makedirs(data_dir, exist_ok=True)
 
@@ -94,7 +95,7 @@ def eval_from_ckpt(test_images, test_labels, ckpt_path):
     print("Restored model, accuracy: {:5.2f}%".format(100 * acc))
 
 
-def save_every_n_ckpt(train_images, train_lables,
+def save_every_n_ckpt(train_labels, test_labels, train_images, test_images,
                       data_dir=CKPTS_ALL_DIR, cp_name_pattern=CKPT_NAME_PATTERN,
                       every_epochs=5, epochs=50):
 
@@ -111,7 +112,6 @@ def save_every_n_ckpt(train_images, train_lables,
         verbose=1, 
         save_weights_only=True,
         save_freq=every_epochs*batch_size)
-        save_freq=5*batch_size)
 
 
     # Create a new model instance
@@ -137,18 +137,20 @@ def slp(data_dir):
     train_labels, test_labels, train_images, test_images = get_example_dataset()
 
     # save checkpoint(s)
-    model_1_ckpt = save_all_ckpt(train_images, train_lables)
-    model_ckpts = save_every_n_ckpt(train_images, train_lables)
+    model_1_ckpt = save_all_ckpt(train_labels, test_labels, train_images, test_images)
+    model_ckpts = save_every_n_ckpt(train_labels, test_labels, train_images, test_images)
 
     # save model
     models_dir = "models"
     os.makedirs(models_dir, exist_ok=True)
-    model_1_ckpt.save( models_dir, "model_1_ckpt")
-    model_ckpts.save( models_dir, "model_ckpts")
+    model_1_ckpt.save("%s/%s" % (models_dir, "model_1_ckpt"))
+    model_ckpts.save( "%s/%s" % (models_dir, "model_ckpts"))
 
-    # eval test images with lables from checkpoints
-    eval_from_ckpt(test_images, test_labels, CKPT_NAME)
-    eval_from_ckpt(test_images, test_labels, CKPT_NAME_PATTERN)
+    # eval test from checkpoint or latest checkpoint
+    eval_from_ckpt(test_images, test_labels, "%s/%s" % (CKPT_1_DIR, CKPT_NAME))
+
+    latest_ckpt = tf.train.latest_checkpoint(CKPTS_ALL_DIR)
+    eval_from_ckpt(test_images, test_labels, latest_ckpt)
 
     # or tf.keras.models.load_model('saved_model/my_model')
     model_1_ckpt.summary()
