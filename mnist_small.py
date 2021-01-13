@@ -6,6 +6,7 @@ from tensorflow import keras
 
 print(tf.version.VERSION)
 
+
 CKPT_1_DIR = "data_1_ckpt"
 CKPTS_ALL_DIR = "data_all_ckpts"
 
@@ -13,6 +14,8 @@ CKPT_NAME_PATTERN = "cp-{epoch:04d}.ckpt"
 CKPT_NAME = "cp.ckpt"
 
 #example from https://www.tensorflow.org/tutorials/keras/save_and_load
+
+
 
 # Define a simple sequential model
 def create_model():
@@ -28,7 +31,9 @@ def create_model():
 
       return model
 
+
 def get_example_dataset():
+
 
     (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.mnist.load_data()
 
@@ -38,6 +43,7 @@ def get_example_dataset():
     train_images = train_images[:1000].reshape(-1, 28 * 28) / 255.0
     test_images = test_images[:1000].reshape(-1, 28 * 28) / 255.0
 
+
     return train_labels, test_labels, train_images, test_images
 
 
@@ -45,10 +51,12 @@ def save_all_ckpt(train_images, train_lables, data_dir=CKPT_1_DIR, cp_name=CKPT_
 
     os.makedirs(data_dir, exist_ok=True)
 
+
     # Create a basic model instance
     model = create_model()
 
     checkpoint_path = "%s/%s" % (data_dir, cp_name)
+
 
     # Create a callback that saves the model's weights
     cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
@@ -57,7 +65,7 @@ def save_all_ckpt(train_images, train_lables, data_dir=CKPT_1_DIR, cp_name=CKPT_
 
     # Train the model with the new callback
     model.fit(train_images, 
-              train_labels,  
+              train_labels,
               epochs=epochs,
               validation_data=(test_images, test_labels),
               callbacks=[cp_callback])  # Pass callback to training
@@ -103,6 +111,8 @@ def save_every_n_ckpt(train_images, train_lables,
         verbose=1, 
         save_weights_only=True,
         save_freq=every_epochs*batch_size)
+        save_freq=5*batch_size)
+
 
     # Create a new model instance
     model = create_model()
@@ -143,6 +153,7 @@ def slp(data_dir):
     # or tf.keras.models.load_model('saved_model/my_model')
     model_1_ckpt.summary()
     model_ckpts.summary()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='processing data')
