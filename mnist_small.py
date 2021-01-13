@@ -143,8 +143,8 @@ def slp(data_dir):
     # save model
     models_dir = "models"
     os.makedirs(models_dir, exist_ok=True)
-    model_1_ckpt.save( models_dir, "model_1_ckpt")
-    model_ckpts.save( models_dir, "model_ckpts")
+    model_1_ckpt.save("%s/%s" % (models_dir, "model_1_ckpt"))
+    model_ckpts.save( "%s/%s" % (models_dir, "model_ckpts"))
 
     # eval test from checkpoint or latest checkpoint
     eval_from_ckpt(test_images, test_labels, "%s/%s" % (CKPT_1_DIR, CKPT_NAME))
