@@ -7,6 +7,16 @@ from tensorflow import keras
 print(tf.version.VERSION)
 
 
+CKPT_1_DIR = "data_1_ckpt"
+CKPTS_ALL_DIR = "data_all_ckpts"
+
+CKPT_NAME_PATTERN = "cp-{epoch:04d}.ckpt"
+CKPT_NAME = "cp.ckpt"
+
+#example from https://www.tensorflow.org/tutorials/keras/save_and_load
+
+
+
 # Define a simple sequential model
 def create_model():
       model = tf.keras.models.Sequential([
@@ -21,8 +31,10 @@ def create_model():
 
       return model
 
-def slp(data_dir):
-    #TODO: data_dir is fake
+
+def get_example_dataset():
+
+
     (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.mnist.load_data()
 
     train_labels = train_labels[:1000]
@@ -32,21 +44,19 @@ def slp(data_dir):
     test_images = test_images[:1000].reshape(-1, 28 * 28) / 255.0
 
 
-    os.makedirs("training_1", exist_ok=True)
-    os.makedirs("training_2", exist_ok=True)
-    os.makedirs("saved_model_pip", exist_ok=True)
+    return train_labels, test_labels, train_images, test_images
+
+
+def save_all_ckpt(train_images, train_lables, data_dir=CKPT_1_DIR, cp_name=CKPT_NAME, epochs=10):
+
+    os.makedirs(data_dir, exist_ok=True)
+
 
     # Create a basic model instance
     model = create_model()
 
-    # Display the model's architecture
-    model.summary()
+    checkpoint_path = "%s/%s" % (data_dir, cp_name)
 
-
-
-
-    checkpoint_path = "training_1/cp.ckpt"
-    checkpoint_dir = os.path.dirname(checkpoint_path)
 
     # Create a callback that saves the model's weights
     cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
@@ -55,8 +65,8 @@ def slp(data_dir):
 
     # Train the model with the new callback
     model.fit(train_images, 
-              train_labels,  
-              epochs=10,
+              train_labels,
+              epochs=epochs,
               validation_data=(test_images, test_labels),
               callbacks=[cp_callback])  # Pass callback to training
 
@@ -64,8 +74,9 @@ def slp(data_dir):
     # These warnings (and similar warnings throughout this notebook)
     # are in place to discourage outdated usage, and can be ignored.
 
+    return model
 
-
+def eval_from_ckpt(test_images, test_labels, ckpt_path):
 
     # Create a basic model instance
     model = create_model()
@@ -74,23 +85,23 @@ def slp(data_dir):
     loss, acc = model.evaluate(test_images, test_labels, verbose=2)
     print("Untrained model, accuracy: {:5.2f}%".format(100 * acc))
 
-
-
     # Loads the weights
-    model.load_weights(checkpoint_path)
+    print("Trying to load weights from %s" % ckpt_path)
+    model.load_weights(ckpt_path) #checkpoint_path: data_dir/cp-0050.ckpt or data_dir/cp.ckpt
 
     # Re-evaluate the model
     loss, acc = model.evaluate(test_images, test_labels, verbose=2)
     print("Restored model, accuracy: {:5.2f}%".format(100 * acc))
 
 
+def save_every_n_ckpt(train_images, train_lables,
+                      data_dir=CKPTS_ALL_DIR, cp_name_pattern=CKPT_NAME_PATTERN,
+                      every_epochs=5, epochs=50):
 
-
-
+    os.makedirs(data_dir, exist_ok=True)
 
     # Include the epoch in the file name (uses `str.format`)
-    checkpoint_path = "training_2/cp-{epoch:04d}.ckpt"
-    checkpoint_dir = os.path.dirname(checkpoint_path)
+    checkpoint_path = "%s/%s" % (data_dir, cp_name_pattern)
 
     batch_size = 32
 
@@ -99,7 +110,9 @@ def slp(data_dir):
         filepath=checkpoint_path, 
         verbose=1, 
         save_weights_only=True,
+        save_freq=every_epochs*batch_size)
         save_freq=5*batch_size)
+
 
     # Create a new model instance
     model = create_model()
@@ -110,43 +123,36 @@ def slp(data_dir):
     # Train the model with the new callback
     model.fit(train_images, 
               train_labels,
-              epochs=50, 
+              epochs=epochs,
               callbacks=[cp_callback],
               validation_data=(test_images, test_labels),
               verbose=0)
 
+    return model
 
 
+def slp(data_dir):
+    #TODO: data_dir is fake here
 
-    latest = tf.train.latest_checkpoint(checkpoint_dir)
+    train_labels, test_labels, train_images, test_images = get_example_dataset()
 
+    # save checkpoint(s)
+    model_1_ckpt = save_all_ckpt(train_images, train_lables)
+    model_ckpts = save_every_n_ckpt(train_images, train_lables)
 
+    # save model
+    models_dir = "models"
+    os.makedirs(models_dir, exist_ok=True)
+    model_1_ckpt.save( models_dir, "model_1_ckpt")
+    model_ckpts.save( models_dir, "model_ckpts")
 
-    # Create a new model instance
-    model = create_model()
+    # eval test images with lables from checkpoints
+    eval_from_ckpt(test_images, test_labels, CKPT_NAME)
+    eval_from_ckpt(test_images, test_labels, CKPT_NAME_PATTERN)
 
-    # Load the previously saved weights
-    model.load_weights(latest)
-
-    # Re-evaluate the model
-    loss, acc = model.evaluate(test_images, test_labels, verbose=2)
-    print("zRestored model, accuracy: {:5.2f}%".format(100 * acc))
-
-
-
-    # Create and train a new model instance.
-    model = create_model()
-    model.fit(train_images, train_labels, epochs=5)
-
-
-
-    new_model = tf.keras.models.load_model('saved_model_pip/my_model')
-
-    # Check its architecture
-    new_model.summary()
-
-
-    model.save('saved_model_pip/my_model') 
+    # or tf.keras.models.load_model('saved_model/my_model')
+    model_1_ckpt.summary()
+    model_ckpts.summary()
 
 
 if __name__ == '__main__':
