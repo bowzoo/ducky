@@ -1,5 +1,8 @@
 import argparse
+import boto3
+import io
 import os
+import sys
 
 import tensorflow as tf
 from tensorflow import keras
@@ -12,6 +15,10 @@ CKPTS_ALL_DIR = "data_all_ckpts"
 
 CKPT_NAME_PATTERN = "cp-{epoch:04d}.ckpt"
 CKPT_NAME = "cp.ckpt"
+
+MODELS_DIR = "models"
+S3_BUCKET="itv08y-eks-zoe-data"
+AWS_REGION="ap-southeast-1"
 
 #example from https://www.tensorflow.org/tutorials/keras/save_and_load
 
@@ -130,6 +137,38 @@ def save_every_n_ckpt(train_labels, test_labels, train_images, test_images,
 
     return model
 
+def save_s3(local_directory, bucket, destination):
+
+
+    client = boto3.client('s3')
+
+    # enumerate local files recursively
+    for root, dirs, files in os.walk(local_directory):
+
+        for filename in files:
+
+            # construct the full local path
+            local_path = os.path.join(root, filename)
+
+           # construct the full Dropbox path
+           relative_path = os.path.relpath(local_path, local_directory)
+           s3_path = os.path.join(destination, relative_path)
+
+           # relative_path = os.path.relpath(os.path.join(root, filename))
+
+           print( 'Searching "%s" in "%s"' % (s3_path, bucket))
+           try:
+               client.head_object(Bucket=bucket, Key=s3_path)
+               print( "Path found on S3! Skipping %s..." % s3_path)
+
+               # try:
+               # client.delete_object(Bucket=bucket, Key=s3_path)
+               # except:
+               # print "Unable to delete %s..." % s3_path
+           except:
+               print( "Uploading %s..." % s3_path)
+               client.upload_file(local_path, bucket, s3_path)
+
 
 def slp(data_dir):
     #TODO: data_dir is fake here
@@ -140,11 +179,10 @@ def slp(data_dir):
     model_1_ckpt = save_all_ckpt(train_labels, test_labels, train_images, test_images)
     model_ckpts = save_every_n_ckpt(train_labels, test_labels, train_images, test_images)
 
-    # save model
-    models_dir = "models"
-    os.makedirs(models_dir, exist_ok=True)
-    model_1_ckpt.save("%s/%s" % (models_dir, "model_1_ckpt"))
-    model_ckpts.save( "%s/%s" % (models_dir, "model_ckpts"))
+    # save model in models
+    os.makedirs(MODELS_DIR, exist_ok=True)
+    model_1_ckpt.save("%s/%s" % (MODELS_DIR, "model_1_ckpt"))
+    model_ckpts.save( "%s/%s" % (MODELS_DIR, "model_ckpts"))
 
     # eval test from checkpoint or latest checkpoint
     eval_from_ckpt(test_images, test_labels, "%s/%s" % (CKPT_1_DIR, CKPT_NAME))
@@ -155,6 +193,10 @@ def slp(data_dir):
     # or tf.keras.models.load_model('saved_model/my_model')
     model_1_ckpt.summary()
     model_ckpts.summary()
+
+
+    # save all data from models/ to s3
+    save_s3(MODELS_DIR, S3_BUCKET, "omg")
 
 
 if __name__ == '__main__':
