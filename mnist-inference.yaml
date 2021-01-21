@@ -45,7 +45,7 @@ spec:
         - --port=9000
         - --rest_api_port=8500
         - --model_name=mnist
-        - --model_base_path=s3://$S3_BUCKET/mnist/tf_saved_model
+        - --model_base_path=s3://itv08y-eks-zoe-data/mnist/tf_saved_model
         command:
         - /usr/bin/tensorflow_model_server
         env:
@@ -60,13 +60,13 @@ spec:
               key: AWS_SECRET_ACCESS_KEY
               name: aws-secret
         - name: AWS_REGION
-          value: $AWS_REGION
+          value: ap-southeast-1
         - name: S3_USE_HTTPS
           value: "true"
         - name: S3_VERIFY_SSL
           value: "true"
         - name: S3_ENDPOINT
-          value: s3.$AWS_REGION.amazonaws.com
+          value: s3.ap-southeast-1.amazonaws.com
         image: tensorflow/serving:1.11.1
         imagePullPolicy: IfNotPresent
         livenessProbe:

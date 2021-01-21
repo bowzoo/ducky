@@ -15,14 +15,14 @@ spec:
       - "python"
       - "mnist.py"
       - "--model_export_path"
-      - "s3://$S3_BUCKET/mnist/tf_saved_model"
+      - "s3://itv08y-eks-zoe-data/mnist/tf_saved_model"
       - "--model_summary_path"
-      - "s3://$S3_BUCKET/mnist/tf_summary"
+      - "s3://itv08y-eks-zoe-data/mnist/tf_summary"
       - "--epochs"
       - "40"
     env:
       - name: AWS_REGION
-        value: $AWS_REGION
+        value: ap-southeast-1
       - name: AWS_ACCESS_KEY_ID
         valueFrom:
           secretKeyRef:
