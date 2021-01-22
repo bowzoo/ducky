@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mnist
+    type: inference
+    framework: tensorflow
+  name: mnist-inference
+  namespace: kubeflow
+spec:
+  selector:
+    matchLabels:
+      app: mnist
+  template:
+    metadata:
+      labels:
+        app: mnist
+        version: v1
+        type: inference
+        framework: tensorflow
+    spec:
+      containers:
+      - args:
+        - --port=9000
+        - --rest_api_port=8500
+        - --model_name=mnist
+        - --model_base_path=s3://itv08y-eks-zoe-data/mnist/tf_saved_model
+        command:
+        - /usr/bin/tensorflow_model_server
+        env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: AWS_ACCESS_KEY_ID
+              name: aws-secret
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: AWS_SECRET_ACCESS_KEY
+              name: aws-secret
+        - name: AWS_REGION
+          value: ap-southeast-1
+        - name: S3_USE_HTTPS
+          value: "true"
+        - name: S3_VERIFY_SSL
+          value: "true"
+        - name: S3_ENDPOINT
+          value: s3.ap-southeast-1.amazonaws.com
+        image: tensorflow/serving:1.11.1
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          tcpSocket:
+            port: 9000
+        name: mnist
+        ports:
+        - containerPort: 9000
+        - containerPort: 8500
+        resources:
+          limits:
+            cpu: "4"
+            memory: 4Gi
+          requests:
+            cpu: "1"
+            memory: 1Gi
