@@ -180,9 +180,11 @@ def slp(data_dir):
     model_ckpts = save_every_n_ckpt(train_labels, test_labels, train_images, test_images)
 
     # save model in models
-    os.makedirs(MODELS_DIR, exist_ok=True)
-    model_1_ckpt.save("%s/%s" % (MODELS_DIR, "model_1_ckpt"))
-    model_ckpts.save( "%s/%s" % (MODELS_DIR, "model_ckpts"))
+    path = os.path.join("/src", MODELS_DIR)
+    #os.makedirs(MODELS_DIR, exist_ok=True)
+    os.makedirs(path, exist_ok=True)
+    model_1_ckpt.save("%s/%s" % (path, "model_1_ckpt"))
+    model_ckpts.save( "%s/%s" % (path, "model_ckpts"))
 
     # eval test from checkpoint or latest checkpoint
     eval_from_ckpt(test_images, test_labels, "%s/%s" % (CKPT_1_DIR, CKPT_NAME))
