@@ -196,7 +196,7 @@ def slp(data_dir):
 
 
     # save all data from models/ to s3
-    save_s3(MODELS_DIR, S3_BUCKET, "omg")
+    #save_s3(MODELS_DIR, S3_BUCKET, "omg")
 
 
 if __name__ == '__main__':
